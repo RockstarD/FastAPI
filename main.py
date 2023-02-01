@@ -1,4 +1,3 @@
-import pickle
 from fastapi import FastAPI, Body
 from typing import Union
 from mymodal import predictAnswer
