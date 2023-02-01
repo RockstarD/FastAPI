@@ -1,27 +1,41 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+import pickle
+from fastapi import FastAPI, Body
+from typing import Union
+from mymodal import predictAnswer
+from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-class Msg(BaseModel):
-    msg: str
+origin = [
+    "http://localhost",
+    "http://localhost:8080",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origin,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World. Welcome to FastAPI!"}
+# server html file at '/' route
+@app.get('/')
+async def index():
+    return FileResponse('./src/index.html')
 
+@app.post('/predict')
+async def predict(data: dict = Body(...)):
+    print(data)
+    questions = []
+    for i in data:
+        # questions.append(data[i].values()) add valuse to list
+        questions.append(data[i].get('question'))
+    print(questions)
+    ans  = predictAnswer( questions)
+    return {
+        'data': ans
+    }
 
-@app.get("/path")
-async def demo_get():
-    return {"message": "This is /path endpoint, use a post request to transform the text to uppercase"}
-
-
-@app.post("/path")
-async def demo_post(inp: Msg):
-    return {"message": inp.msg.upper()}
-
-
-@app.get("/path/{path_id}")
-async def demo_get_path_id(path_id: int):
-    return {"message": f"This is /path/{path_id} endpoint, use post request to retrieve result"}
